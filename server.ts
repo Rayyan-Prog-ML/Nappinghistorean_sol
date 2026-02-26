@@ -3,6 +3,15 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+console.log("--- SERVER STARTING ---");
+console.log("GEMINI_API_KEY:", process.env.GEMINI_API_KEY ? "LOADED" : "MISSING");
+console.log("NVIDIA_API_KEY:", process.env.NVIDIA_API_KEY ? "LOADED" : "MISSING");
+console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "LOADED" : "MISSING");
+console.log("------------------------");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

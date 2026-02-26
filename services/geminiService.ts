@@ -31,9 +31,13 @@ async function executeWithRetry<T>(
   operation: (ai: GoogleGenAI) => Promise<T>, 
   retries = 3
 ): Promise<T> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
+    throw new Error("GEMINI_API_KEY is missing. Please check your .env file.");
+  }
+
   try {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-    const ai = new GoogleGenAI({ apiKey: apiKey as string });
+    const ai = new GoogleGenAI({ apiKey: apiKey });
     return await operation(ai);
   } catch (error: any) {
     const status = error.status || error.response?.status;

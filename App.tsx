@@ -138,7 +138,10 @@ const App: React.FC = () => {
           const { auditedScript } = await masterAuditScript(rawFullScript, wizardTopic);
           setProject(prev => ({ ...prev, scriptText: auditedScript.trim(), videoTitle: wizardTopic, visualStage: 'idle' }));
           setStatus({ step: 'ready', progress: 100, message: '1,500 Word Script Generated & Audited.' });
-      } catch (e) { setStatus({ step: 'idle', progress: 0, message: 'Production Error.' }); }
+      } catch (e: any) { 
+          console.error("Production Error:", e);
+          setStatus({ step: 'idle', progress: 0, message: `Production Failed: ${e.message || 'Unknown Error'}` }); 
+      }
   };
 
   const runGenerateScenes = async () => {
