@@ -44,10 +44,10 @@ async function executeWithRetry<T>(
     const isTransient = status === 429 || status >= 500 || !status;
 
     if (isTransient && retries > 0) {
-        const baseDelay = status === 429 ? 5000 : 1000;
+        const baseDelay = status === 429 ? 12000 : 2000; // Increased for free tier
         const attemptNumber = 3 - retries;
-        const delayMs = Math.min(baseDelay * Math.pow(2, attemptNumber), 45000);
-        console.warn(`[GEMINI FAIL] Status ${status}. Retrying. Retries left: ${retries}`);
+        const delayMs = Math.min(baseDelay * Math.pow(2, attemptNumber), 60000);
+        console.warn(`[GEMINI FAIL] Status ${status}. Retrying in ${delayMs}ms. Retries left: ${retries}`);
         await new Promise(r => setTimeout(r, delayMs));
         return executeWithRetry(operation, retries - 1);
     }
@@ -64,7 +64,7 @@ export const generateScenes = async (script: string, totalDuration: number): Pro
 
   return await executeWithRetry(async (ai) => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview", 
+      model: "gemini-3-flash-preview", 
       contents: `Now that you have analyzed the full script, generate the scenes according to the script.
       The total number of scenes should be approximately ${targetSceneCount}. 
       
@@ -136,7 +136,7 @@ export const generateScenes = async (script: string, totalDuration: number): Pro
 export const generateImagePrompts = async (scenes: Scene[]): Promise<string[]> => {
   return await executeWithRetry(async (ai) => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview", 
+      model: "gemini-3-flash-preview", 
       contents: `Now that you have provided all the scenes, analyze each individual scene and generate highly detailed image prompts exactly according to how the visuals were described in the video-style scenes.
       
       Instructions:
@@ -168,7 +168,7 @@ export const generateImagePrompts = async (scenes: Scene[]): Promise<string[]> =
 export const generateVideoPrompts = async (scenes: Scene[]): Promise<string[]> => {
   return await executeWithRetry(async (ai) => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview", 
+      model: "gemini-3-flash-preview", 
       contents: `I now have all the generated images and want to convert them into a complete video. 
       Create detailed video generation prompts for each image so that I can smoothly transform the images into cinematic video scenes.
       
@@ -241,7 +241,7 @@ export const generateImageForScene = async (description: string, aspectRatio: As
 export const masterAuditScript = async (script: string, topic: string): Promise<{ auditedScript: string; changesLog: string }> => {
   const result = await executeWithRetry(async (ai) => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: `You are a professional script editor. Review this long-form documentary script. Identify patches. Topic: ${topic}. Script: ${script}`,
       config: {
         responseMimeType: "application/json",
@@ -497,7 +497,7 @@ RAW CHAPTERS: ${rawChapters.join('|')}
 OUTPUT RULE: Return the refined chapters as a polished list. Do not change the number of chapters significantly.`;
 
         const res = await ai.models.generateContent({
-            model: "gemini-3-pro-preview", 
+            model: "gemini-3-flash-preview", 
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -587,7 +587,7 @@ export const generateStoryChapter = async (topic: string, chapter: string, prevS
 export const generateVideoMetadata = async (script: string, topic: string): Promise<string> => {
     const result = await executeWithRetry(async (ai) => {
         const response = await ai.models.generateContent({
-            model: "gemini-3-pro-preview",
+            model: "gemini-3-flash-preview",
             contents: `Generate YouTube SEO metadata for this documentray: ${topic}. Script: ${script.substring(0, 4000)}`,
             config: {
                 responseMimeType: "application/json",
