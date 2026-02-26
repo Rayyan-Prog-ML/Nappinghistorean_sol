@@ -374,23 +374,55 @@ export const generateOpenAIVoiceOver = async (
 ): Promise<Blob> => {
     const cleanedText = text.replace(/[*_#~`]/g, '').trim();
     
-    onProgress(10, "Connecting to OpenAI...");
-    const response = await fetch("/api/generate-audio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: cleanedText, voice })
-    });
-
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "OpenAI Synthesis Failed");
+    // OpenAI TTS limit is 4096 characters. We chunk at 3500 for safety.
+    const chunks: string[] = [];
+    let pos = 0;
+    while (pos < cleanedText.length) {
+        let end = Math.min(pos + 3500, cleanedText.length);
+        if (end < cleanedText.length) {
+            // Try to break at a sentence or space
+            const lastPeriod = cleanedText.lastIndexOf('. ', end);
+            if (lastPeriod > pos) {
+                end = lastPeriod + 1;
+            } else {
+                const lastSpace = cleanedText.lastIndexOf(' ', end);
+                if (lastSpace > pos) end = lastSpace;
+            }
+        }
+        chunks.push(cleanedText.substring(pos, end).trim());
+        pos = end;
     }
 
-    const blob = await response.blob();
+    const audioChunks: Blob[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+        onProgress(Math.round(((i + 1) / chunks.length) * 90), `Synthesizing Part ${i + 1}/${chunks.length}...`);
+        
+        const response = await fetch("/api/generate-audio", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: chunks[i], voice })
+        });
+
+        if (!response.ok) {
+            let errorMsg = "OpenAI Synthesis Failed";
+            try {
+                const errData = await response.json();
+                errorMsg = errData.error || errorMsg;
+            } catch (e) {}
+            throw new Error(errorMsg);
+        }
+
+        const blob = await response.blob();
+        audioChunks.push(blob);
+    }
+
+    // Merge blobs
+    onProgress(95, "Merging Audio Clips...");
+    const mergedBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
     
     // Apply Silence Truncation Engine to tighten the narration
     onProgress(99, "Cleaning Silence...");
-    return await trimSilenceFromAudio(blob);
+    return await trimSilenceFromAudio(mergedBlob);
 };
 
 export const generateVoiceOver = async (text: string, onProgress: (p: number, m: string) => void): Promise<Blob> => {

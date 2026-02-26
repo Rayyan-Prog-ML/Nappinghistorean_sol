@@ -8,9 +8,16 @@ import dotenv from "dotenv";
 dotenv.config();
 
 console.log("--- SERVER STARTING ---");
-console.log("GEMINI_API_KEY:", process.env.GEMINI_API_KEY ? "LOADED" : "MISSING");
-console.log("NVIDIA_API_KEY:", process.env.NVIDIA_API_KEY ? "LOADED" : "MISSING");
-console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "LOADED" : "MISSING");
+const checkKey = (key: string) => {
+  const val = process.env[key];
+  if (!val) return "MISSING (Not in .env)";
+  if (val.trim() === "") return "EMPTY (Key is there but has no value)";
+  return "LOADED ✅";
+};
+
+console.log("GEMINI_API_KEY:", checkKey("GEMINI_API_KEY") === "LOADED ✅" ? "LOADED ✅" : checkKey("API_KEY"));
+console.log("NVIDIA_API_KEY:", checkKey("NVIDIA_API_KEY"));
+console.log("OPENAI_API_KEY:", checkKey("OPENAI_API_KEY"));
 console.log("------------------------");
 
 const __filename = fileURLToPath(import.meta.url);
