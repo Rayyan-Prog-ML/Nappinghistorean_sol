@@ -29,14 +29,18 @@ if (fs.existsSync(".env")) {
 
 const checkKey = (key: string) => {
   const val = process.env[key];
-  if (!val) return "MISSING ❌";
+  if (!val) return null;
   if (val.trim() === "") return "EMPTY ⚠️";
   return `LOADED ✅ (${val.substring(0, 4)}...)`;
 };
 
-console.log("GEMINI_API_KEY:", checkKey("GEMINI_API_KEY") === "LOADED ✅" ? "LOADED ✅" : checkKey("API_KEY"));
-console.log("NVIDIA_API_KEY:", checkKey("NVIDIA_API_KEY"));
-console.log("OPENAI_API_KEY:", checkKey("OPENAI_API_KEY"));
+const geminiStatus = checkKey("GEMINI_API_KEY") || checkKey("API_KEY") || "MISSING ❌";
+const nvidiaStatus = checkKey("NVIDIA_API_KEY") || "MISSING ❌";
+const openaiStatus = checkKey("OPENAI_API_KEY") || "MISSING ❌";
+
+console.log("GEMINI_API_KEY:", geminiStatus);
+console.log("NVIDIA_API_KEY:", nvidiaStatus);
+console.log("OPENAI_API_KEY:", openaiStatus);
 console.log("-------------------------------");
 
 const __filename = fileURLToPath(import.meta.url);
