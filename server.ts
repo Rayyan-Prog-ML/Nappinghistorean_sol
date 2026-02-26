@@ -4,21 +4,29 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 
-console.log("--- SERVER STARTING ---");
+console.log("--- ENVIRONMENT DIAGNOSTICS ---");
+console.log("Current Directory:", process.cwd());
+
+// List all .env files found
+const files = fs.readdirSync(process.cwd());
+const envFiles = files.filter(f => f.startsWith('.env'));
+console.log("Files found starting with '.env':", envFiles.length > 0 ? envFiles.join(", ") : "NONE");
+
 const checkKey = (key: string) => {
   const val = process.env[key];
-  if (!val) return "MISSING (Not in .env)";
-  if (val.trim() === "") return "EMPTY (Key is there but has no value)";
-  return "LOADED ✅";
+  if (!val) return "MISSING ❌";
+  if (val.trim() === "") return "EMPTY ⚠️";
+  return `LOADED ✅ (${val.substring(0, 4)}...)`;
 };
 
 console.log("GEMINI_API_KEY:", checkKey("GEMINI_API_KEY") === "LOADED ✅" ? "LOADED ✅" : checkKey("API_KEY"));
 console.log("NVIDIA_API_KEY:", checkKey("NVIDIA_API_KEY"));
 console.log("OPENAI_API_KEY:", checkKey("OPENAI_API_KEY"));
-console.log("------------------------");
+console.log("-------------------------------");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
