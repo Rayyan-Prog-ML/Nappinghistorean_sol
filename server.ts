@@ -16,6 +16,17 @@ const files = fs.readdirSync(process.cwd());
 const envFiles = files.filter(f => f.startsWith('.env'));
 console.log("Files found starting with '.env':", envFiles.length > 0 ? envFiles.join(", ") : "NONE");
 
+// Smart loading: Try .env first, then fallback to .env.example
+if (fs.existsSync(".env")) {
+  dotenv.config({ path: ".env" });
+  console.log("Using environment file: .env");
+} else if (fs.existsSync(".env.example")) {
+  dotenv.config({ path: ".env.example" });
+  console.log("Using environment file: .env.example (Fallback)");
+} else {
+  console.log("No .env or .env.example file found!");
+}
+
 const checkKey = (key: string) => {
   const val = process.env[key];
   if (!val) return "MISSING ❌";
